@@ -30,7 +30,7 @@
   const TWITTER_EPOCH = 1288834974657n;
   const ID_SHIFT = 22n;
   const MIN_SPLIT = 4194304000n; // 1 秒的 snowflake 跨度
-  const CACHE_VERSION = 2;
+  const CACHE_VERSION = 3;
   const CACHE_TTL = 30 * 60 * 1000;
   const MAX_FOLLOWING = 50000;
   const MAX_FOLLOWERS = 50000;
@@ -952,13 +952,17 @@
     });
 
     // 服务端返回的列表已按「关注先后」排好。
-    // 用递减索引伪造排序区间，保证 sortUsers('recent') 原样保留这个顺序
-    // （服务端 orderKey 在同一页内相同，不能直接用来排序）。
-    const orderUsers = (list) => {
+    // 有 orderKey 时用它还原真实时间区间：同一时间的用户会得到相同的时间键，
+    // 「同时间按粉丝数」的排序才能真正生效。
+    // 没有 orderKey（如 following/followers 精简列表）时，用递减索引兜底，
+    // 保证 sortUsers('recent') 原样保留服务端顺序。
+    const orderUsers = (list, useOrderKey) => {
       const arr = list || [];
       return arr.map((u, i) => {
-        const rank = BigInt(arr.length - i);
-        return { ...toUser(u), idx: i, hasOrder: true, hi: rank, lo: rank };
+        const fallback = BigInt(arr.length - i);
+        const raw = useOrderKey && u.orderKey != null ? String(u.orderKey) : '';
+        const mid = /^\d+$/.test(raw) ? BigInt(raw) : fallback;
+        return { ...toUser(u), idx: i, hasOrder: true, hi: mid, lo: mid };
       });
     };
 
@@ -971,20 +975,11 @@
 
     return {
       profile,
-      following: orderUsers(data.following),
-      followers: orderUsers(data.followers),
-      // 服务端返回的 notBack/owe 已经按关注先后排好；
-      // 注入递减索引，保证 sortUsers('recent') 不再重排。
-      notBack: orderUsers(data.notBack).map((u, i, arr) => ({
-        ...u,
-        hi: BigInt(arr.length - i),
-        lo: BigInt(arr.length - i),
-      })),
-      owe: orderUsers(data.owe).map((u, i, arr) => ({
-        ...u,
-        hi: BigInt(arr.length - i),
-        lo: BigInt(arr.length - i),
-      })),
+      following: orderUsers(data.following, true),
+      followers: orderUsers(data.followers, true),
+      // 保留后端返回的真实时间键，供「时间优先 + 粉丝数」排序使用
+      notBack: orderUsers(data.notBack, true),
+      owe: orderUsers(data.owe, true),
       mutual: data.stats?.mutual ?? 0,
       rate: data.stats?.rate ?? 0,
       warnings: data.warnings || [],
@@ -1824,8 +1819,20 @@
 
   // 注册 PWA Service Worker
   if ('serviceWorker' in navigator) {
+    const hadController = !!navigator.serviceWorker.controller;
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        // 新版本激活后自动刷新一次，避免旧缓存导致界面不更新
+        reg.addEventListener('updatefound', () => {
+          const installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'activated' && hadController) {
+              location.reload();
+            }
+          });
+        });
+      }).catch(() => {});
     });
   }
 

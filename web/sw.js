@@ -1,5 +1,5 @@
 // HackMirror Service Worker
-const CACHE_NAME = 'hackmirror-v1';
+const CACHE_NAME = 'hackmirror-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -37,9 +37,27 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== location.origin) return;
 
+  // 页面导航：网络优先，保证发布后立刻看到新版本；离线时回退缓存
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() =>
+          caches.match(event.request).then((cached) => cached || caches.match('/index.html'))
+        )
+    );
+    return;
+  }
+
+  // 其他静态资源：先用缓存，同时后台刷新
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      // 网络优先并刷新缓存
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
@@ -54,4 +72,3 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
