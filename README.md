@@ -52,6 +52,7 @@ mirror.mjs    命令行，复用同一核心
 ```bash
 node mirror.mjs <用户名>
 node mirror.mjs <用户名> --blue --sort big
+node mirror.mjs <用户名> --sort recent-big
 node mirror.mjs <用户名> --no-blue
 node mirror.mjs <用户名> --limit 0 --json out.json
 node mirror.mjs <用户名> --api https://api.你的域名.com
@@ -96,7 +97,7 @@ vercel --prod
 | --- | --- |
 | `--blue` | 只看蓝V（`verification.verified`） |
 | `--no-blue` | 不看蓝V（只列非蓝V） |
-| `--sort recent\|big\|small` | 关注先后 / 粉丝多在前 / 粉丝少在前，默认 `recent` |
+| `--sort recent\|big\|small\|recent-big` | 关注先后 / 粉丝多在前 / 粉丝少在前 / 时间优先且同时间粉丝多在前，默认 `recent` |
 | `--limit n` | 每栏显示前 n 条，`0` 为全部，默认 40 |
 | `--workers n` | 每份名单的并发数，默认 4 |
 | `--rps n` | 全局限速（请求/秒），默认 8 |

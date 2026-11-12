@@ -474,12 +474,24 @@
     return a.handle.localeCompare(b.handle);
   }
 
+  // 时间优先 + 粉丝数次优先；索引和用户名兜底，保证顺序确定
+  function cmpRecentBig(a, b) {
+    const am = a._mid ?? (a._mid = orderMid(a));
+    const bm = b._mid ?? (b._mid = orderMid(b));
+    if (am !== bm) return am > bm ? -1 : 1;
+    if (a.followers !== b.followers) return b.followers - a.followers;
+    if (a.idx !== b.idx) return a.idx - b.idx;
+    return a.handle.localeCompare(b.handle);
+  }
+
   function sortUsers(list, mode) {
     const arr = [...list];
     if (mode === 'big') {
       arr.sort((a, b) => b.followers - a.followers || cmpRecent(a, b));
     } else if (mode === 'small') {
       arr.sort((a, b) => a.followers - b.followers || cmpRecent(a, b));
+    } else if (mode === 'recent-big') {
+      arr.sort(cmpRecentBig);
     } else {
       arr.sort(cmpRecent);
     }
@@ -1759,7 +1771,7 @@
   });
 
   sortSelect.addEventListener('change', () => {
-    state.sort = ['recent', 'big', 'small'].includes(sortSelect.value)
+    state.sort = ['recent', 'big', 'small', 'recent-big'].includes(sortSelect.value)
       ? sortSelect.value
       : 'recent';
     state.limit = PAGE_SIZE;

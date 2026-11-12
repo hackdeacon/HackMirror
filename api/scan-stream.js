@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const handle = normalizeHandle(url.searchParams.get('u') || url.searchParams.get('handle'));
-  const sort = ['recent', 'big', 'small'].includes(url.searchParams.get('sort') || '')
+  const sort = ['recent', 'big', 'small', 'recent-big'].includes(url.searchParams.get('sort') || '')
     ? url.searchParams.get('sort')
     : 'recent';
   const blueParam = url.searchParams.get('blue');

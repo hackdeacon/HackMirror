@@ -1,7 +1,7 @@
 /**
  * Vercel Serverless Function: 同步扫描
  *
- * GET /api/scan?u=someuser&sort=recent&blue=1   （blue=1 只看蓝V，blue=0 不看蓝V）
+ * GET /api/scan?u=someuser&sort=recent&blue=1   （sort: recent|big|small|recent-big；blue=1 只看蓝V，blue=0 不看蓝V）
  *
  * 限制：Vercel 免费版单次函数最长执行时间有限（Hobby 约 60s，Pro 300s）。
  * 万级账号可能超时，建议用 /api/scan-stream 或命令行版。
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
 
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const handle = normalizeHandle(url.searchParams.get('u') || url.searchParams.get('handle'));
-  const sort = ['recent', 'big', 'small'].includes(url.searchParams.get('sort') || '')
+  const sort = ['recent', 'big', 'small', 'recent-big'].includes(url.searchParams.get('sort') || '')
     ? url.searchParams.get('sort')
     : 'recent';
   const blueParam = url.searchParams.get('blue');

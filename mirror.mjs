@@ -48,12 +48,18 @@ function userRow(u, i) {
   return `${String(i + 1).padStart(4)}. @${u.handle}  ${name}${badge} · ${compact(u.followers)}粉`;
 }
 
+function sortLabelOf(mode) {
+  if (mode === 'big') return '粉丝多的在前';
+  if (mode === 'small') return '粉丝少的在前';
+  if (mode === 'recent-big') return '时间优先 · 同时间粉丝多在前';
+  return '按关注先后';
+}
+
 function printSection(title, list, opts) {
   const filtered = filterBlue(list, opts);
   const sorted = sortUsers(filtered, opts.sort);
   const shown = opts.limit > 0 ? sorted.slice(0, opts.limit) : sorted;
-  const sortLabel =
-    opts.sort === 'big' ? '粉丝多的在前' : opts.sort === 'small' ? '粉丝少的在前' : '按关注先后';
+  const sortLabel = sortLabelOf(opts.sort);
   console.log(`\n【${title}】${fmt(filtered.length)} 人${blueLabel(opts)} · ${sortLabel}`);
   if (!shown.length) {
     console.log('  （空）');
@@ -121,7 +127,9 @@ async function main() {
 选项:
   --blue                 只看蓝V
   --no-blue              不看蓝V（只列非蓝V）
-  --sort <recent|big|small>  关注先后（默认）/ 粉丝多在前 / 粉丝少在前
+  --sort <recent|big|small|recent-big>
+                         关注先后（默认）/ 粉丝多在前 / 粉丝少在前
+                         recent-big：时间优先，同时间粉丝多在前
   --limit <n>            每栏显示前 n 条，0 = 全部，默认 40
   --workers <n>          每份名单并发数，默认 4
   --rps <n>              全局限速（请求/秒），默认 8
@@ -156,7 +164,7 @@ async function main() {
   const opts = {
     blue: values.blue && !values['no-blue'],
     noBlue: values['no-blue'] && !values.blue,
-    sort: ['recent', 'big', 'small'].includes(values.sort) ? values.sort : 'recent',
+    sort: ['recent', 'big', 'small', 'recent-big'].includes(values.sort) ? values.sort : 'recent',
     limit: Math.max(0, parseInt(values.limit, 10) || 0),
     workers: Math.min(16, Math.max(1, parseInt(values.workers, 10) || 4)),
     rps: Math.max(0, Number(values.rps) || 0),
@@ -314,8 +322,7 @@ function printSummary(payload, opts) {
 
 function printSectionFromJson(title, list, opts) {
   const filtered = filterBlue(list, opts);
-  const sortLabel =
-    opts.sort === 'big' ? '粉丝多的在前' : opts.sort === 'small' ? '粉丝少的在前' : '按关注先后';
+  const sortLabel = sortLabelOf(opts.sort);
   const shown = opts.limit > 0 ? filtered.slice(0, opts.limit) : filtered;
   console.log(`\n【${title}】${fmt(filtered.length)} 人${blueLabel(opts)} · ${sortLabel}`);
   if (!shown.length) {
