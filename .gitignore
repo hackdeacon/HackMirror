@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# 依赖
+node_modules/
+
+# 本地运行产物 / 缓存
+.mirror-cache/
+.wrangler/
+*.log
+
+# 抓取结果（含他人数据，不要提交）
+*.csv
+*.result.json
+out.json
+
+# 环境变量与凭据
+.env
+.env.*
+credentials.json

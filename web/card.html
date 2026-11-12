@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>HackMirror Twitter Card</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      background-color: #09090b;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: #f4f4f5;
+    }
+    .card-canvas {
+      width: 1200px;
+      height: 630px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .card-inner {
+      flex: 1;
+      background: #121215;
+      border: 1.5px solid #27272a;
+      border-radius: 24px;
+      padding: 56px 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    /* Brand Header */
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .badge-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #18181b;
+      border: 1.5px solid #3f3f46;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .brand-name {
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      line-height: 1;
+    }
+    .brand-pill {
+      margin-left: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      color: #a1a1aa;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    /* Center Copy */
+    .content-area {
+      margin-top: 10px;
+    }
+    .headline {
+      font-size: 38px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+    .subline {
+      font-size: 24px;
+      font-weight: 400;
+      color: #a1a1aa;
+      line-height: 1.4;
+    }
+    /* Feature Pills */
+    .feature-grid {
+      display: flex;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .feat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 9999px;
+      padding: 10px 22px;
+      color: #d4d4d8;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .feat-pill .icon {
+      font-size: 18px;
+    }
+    /* Footer */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #27272a;
+      padding-top: 24px;
+      margin-top: 10px;
+    }
+    .domain {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 20px;
+      color: #71717a;
+      font-weight: 500;
+    }
+    .meta-tag {
+      font-size: 16px;
+      color: #52525b;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="card-canvas">
+    <div class="card-inner">
+      <div class="brand-row">
+        <div class="badge-icon">🦙</div>
+        <div class="brand-name">HackMirror</div>
+        <div class="brand-pill">Client-first</div>
+      </div>
+
+      <div class="content-area">
+        <div class="headline">比对 X (Twitter) 关注列表与粉丝列表</div>
+        <div class="subline">查出谁没回关你 · 谁悄悄取关 · 零登录更安全</div>
+        <div class="feature-grid">
+          <div class="feat-pill"><span class="icon">⚡</span> 互关率与蓝V一键筛选</div>
+          <div class="feat-pill"><span class="icon">🔒</span> 无需密码 · 公开只读</div>
+          <div class="feat-pill"><span class="icon">🚀</span> 50,000+ 高性能扫描</div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="domain">https://hackmirror.pages.dev</div>
+        <div class="meta-tag">Open Source · No Login</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

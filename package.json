@@ -1,0 +1,17 @@
+{
+  "name": "hackmirror",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HackMirror：比对 X 关注列表和粉丝列表，找出没回关和没回关谁",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {}
+}

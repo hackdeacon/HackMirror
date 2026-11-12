@@ -1,0 +1,970 @@
+:root {
+  /* Ollama Design Tokens - Light Theme */
+  --canvas: #ffffff;
+  --surface-soft: #fafafa;
+  --surface-card: #ffffff;
+  --surface-dark: #171717;
+  --ink: #000000;
+  --ink-deep: #090909;
+  --charcoal: #525252;
+  --body: #737373;
+  --mute: #a3a3a3;
+  --hairline: #e5e5e5;
+  --hairline-strong: #d4d4d4;
+  --on-dark: #ffffff;
+  --on-dark-mute: rgba(255, 255, 255, 0.7);
+  --focus-ring: rgba(59, 130, 246, 0.5);
+
+  --accent-card-bg: #171717;
+  --accent-card-border: #171717;
+  --accent-card-label: rgba(255, 255, 255, 0.7);
+  --accent-card-value: #ffffff;
+
+  --error-bg: #fff1f2;
+  --error-border: #fecdd3;
+  --error-text: #e11d48;
+  --error-desc: #525252;
+
+  --warn-bg: #fff7ed;
+  --warn-border: #fed7aa;
+  --warn-text: #9a3412;
+
+  --tab-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --selection-bg: #000000;
+  --selection-color: #ffffff;
+
+  --terminal-red: #ff5f56;
+  --terminal-yellow: #ffbd2e;
+  --terminal-green: #27c93f;
+
+  /* Geometry from DESIGN.md: pills everywhere, cards are 12px */
+  --rounded-full: 9999px;
+  --rounded-lg: 12px;
+  --rounded-md: 8px;
+  --rounded-sm: 6px;
+
+  /* Typography */
+  --font-display: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* ---------------------------------------------------------------------------
+ * Dark Mode (Auto follows system preference)
+ * --------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #09090b;
+    --surface-soft: #18181b;
+    --surface-card: #121215;
+    --surface-dark: #27272a;
+    --ink: #f4f4f5;
+    --ink-deep: #ffffff;
+    --charcoal: #a1a1aa;
+    --body: #8e8e93;
+    --mute: #52525b;
+    --hairline: #27272a;
+    --hairline-strong: #3f3f46;
+    --on-dark: #ffffff;
+    --on-dark-mute: rgba(255, 255, 255, 0.7);
+    --focus-ring: rgba(96, 165, 250, 0.45);
+
+    --accent-card-bg: #18181b;
+    --accent-card-border: #3f3f46;
+    --accent-card-label: #a1a1aa;
+    --accent-card-value: #f4f4f5;
+
+    --error-bg: rgba(225, 29, 72, 0.12);
+    --error-border: rgba(225, 29, 72, 0.35);
+    --error-text: #fb7185;
+    --error-desc: #e4e4e7;
+
+    --warn-bg: rgba(234, 88, 12, 0.12);
+    --warn-border: rgba(234, 88, 12, 0.35);
+    --warn-text: #fdba74;
+
+    --tab-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --selection-bg: #ffffff;
+    --selection-color: #000000;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+  background-color: var(--canvas);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-color);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Primary Nav (Ollama Style)
+ * --------------------------------------------------------------------------- */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.brand-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.brand span {
+  color: var(--body);
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.badge-local {
+  border: 1px solid var(--hairline);
+  background: var(--surface-soft);
+  color: var(--charcoal);
+  border-radius: var(--rounded-full);
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------------
+ * Layout Container
+ * --------------------------------------------------------------------------- */
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px 88px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Hero (Ollama Style: Center-aligned, SF Pro Rounded, single pill CTA)
+ * --------------------------------------------------------------------------- */
+.hero {
+  padding: 64px 0 48px;
+  text-align: center;
+}
+
+.hero .eyebrow {
+  margin: 0 0 12px;
+  color: var(--body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.lead {
+  margin: 16px auto 0;
+  max-width: 520px;
+  color: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+ * Form & Input Pill (Ollama search-pill / install-snippet inspiration)
+ * --------------------------------------------------------------------------- */
+.scan-form {
+  display: flex;
+  align-items: center;
+  width: min(520px, 100%);
+  margin: 28px auto 0;
+  padding: 4px 4px 4px 16px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--rounded-full);
+  background: var(--canvas);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-prefix {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mute);
+  user-select: none;
+  margin-right: 2px;
+  line-height: 1;
+}
+
+.scan-form:focus-within .input-prefix {
+  color: var(--ink);
+}
+
+.scan-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  padding: 6px 0;
+}
+
+.scan-form input::placeholder {
+  color: var(--mute);
+  font-family: var(--font-body);
+}
+
+.hint {
+  margin: 16px 0 0;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Terminal Snippet Pill (Ollama install-snippet)
+ * --------------------------------------------------------------------------- */
+.cli-snippet {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 6px 16px;
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-full);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+}
+
+.cli-snippet:hover {
+  border-color: var(--hairline-strong);
+  background: var(--surface-card);
+}
+
+.cli-snippet:active {
+  transform: translateY(1px);
+}
+
+.cli-prompt {
+  color: var(--mute);
+  font-weight: 600;
+}
+
+.cli-snippet code {
+  color: var(--ink);
+}
+
+.cli-action {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--charcoal);
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-full);
+  padding: 1px 8px;
+  background: var(--canvas);
+}
+
+/* ---------------------------------------------------------------------------
+ * Buttons (Ollama button-primary: pure high-contrast pill, button-secondary: outline)
+ * --------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--rounded-full);
+  padding: 8px 20px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  background: var(--surface-soft);
+  color: var(--mute);
+  border-color: transparent;
+}
+
+.btn.primary {
+  background: var(--ink);
+  color: var(--canvas);
+  border-color: var(--ink);
+}
+
+.btn.primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn.ghost {
+  background: var(--canvas);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  border-color: var(--hairline-strong);
+  background: var(--surface-soft);
+}
+
+.btn.small {
+  padding: 6px 14px;
+  font-size: 13px;
+  height: 32px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Cards & Panels (Ollama: flat, 1px solid hairline, 12px rounded)
+ * --------------------------------------------------------------------------- */
+.panel {
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-lg);
+  background: var(--canvas);
+}
+
+/* Progress Panel */
+.progress-panel {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.progress-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.progress-head strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.progress-head p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--body);
+}
+
+.progress-row + .progress-row {
+  margin-top: 14px;
+}
+
+.progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  color: var(--body);
+  font-size: 13px;
+}
+
+.progress-label span:first-child {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--rounded-full);
+  background: var(--surface-soft);
+}
+
+.bar i {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink);
+  transition: width 0.3s ease;
+}
+
+/* Error Panel */
+.error-panel {
+  padding: 24px;
+  margin-bottom: 24px;
+  border-color: var(--error-border);
+  background: var(--error-bg);
+}
+
+.error-panel .eyebrow {
+  color: var(--error-text);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.error-panel h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.error-panel p {
+  margin: 0 0 16px;
+  color: var(--error-desc);
+  font-size: 14px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Results
+ * --------------------------------------------------------------------------- */
+.result-panel {
+  display: grid;
+  gap: 20px;
+}
+
+/* Profile Card */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--hairline);
+  background: var(--surface-soft);
+  flex: 0 0 auto;
+}
+
+.profile-avatar.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.profile-main {
+  min-width: 0;
+}
+
+.profile-main h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.profile-main p {
+  margin: 4px 0 0;
+  color: var(--body);
+  font-size: 14px;
+}
+
+.profile-badge {
+  margin-left: auto;
+  align-self: flex-start;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+/* Stats Grid (Ollama 4-up cards) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  padding: 16px 20px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-lg);
+  background: var(--canvas);
+}
+
+.stat-card .stat-label {
+  display: block;
+  color: var(--body);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.stat-card strong {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+/* Inverted Card (Ollama style highlight) */
+.stat-card.accent {
+  background: var(--accent-card-bg);
+  border-color: var(--accent-card-border);
+}
+
+.stat-card.accent .stat-label {
+  color: var(--accent-card-label);
+}
+
+.stat-card.accent strong {
+  color: var(--accent-card-value);
+}
+
+/* Mirror Panel */
+.mirror-panel {
+  padding: 24px;
+}
+
+.result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.result-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.result-head p {
+  margin: 4px 0 0;
+}
+
+.muted {
+  color: var(--body);
+}
+
+.small {
+  font-size: 13px;
+}
+
+.warn-box {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--warn-border);
+  border-radius: var(--rounded-md);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.warn-box p {
+  margin: 0;
+}
+
+.warn-box p + p {
+  margin-top: 4px;
+}
+
+/* Tabs (Ollama Pill Filter) */
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-full);
+  background: var(--surface-soft);
+  width: fit-content;
+}
+
+.tab {
+  border: 0;
+  border-radius: var(--rounded-full);
+  background: transparent;
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tab span {
+  color: var(--body);
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+.tab.is-active {
+  background: var(--canvas);
+  color: var(--ink);
+  box-shadow: var(--tab-shadow);
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0 14px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--charcoal);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+.select-wrap {
+  display: inline-flex;
+}
+
+select {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-full);
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 6px 28px 6px 14px;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--charcoal) 50%),
+    linear-gradient(135deg, var(--charcoal) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 52%,
+    calc(100% - 10px) 52%;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+select:focus {
+  outline: 0;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.list-note {
+  margin: 0 0 12px;
+  color: var(--mute);
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Mirror List (Clean row style)
+ * --------------------------------------------------------------------------- */
+.mirror-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.mirror-item {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.mirror-item a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 6px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--rounded-md);
+  transition: background-color 0.12s ease;
+}
+
+.mirror-item a:hover {
+  background: var(--surface-soft);
+}
+
+.mirror-item a:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  flex: 0 0 auto;
+}
+
+.avatar.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.item-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.item-name .name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--body);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blue-check {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1d9bf0;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.badge-org {
+  display: inline-block;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--rounded-full);
+  color: var(--charcoal);
+  font-size: 10px;
+  padding: 1px 6px;
+  vertical-align: 1px;
+}
+
+.chevron {
+  color: var(--mute);
+  font-size: 18px;
+  line-height: 1;
+  padding-left: 2px;
+}
+
+.empty-state {
+  padding: 40px 10px;
+  text-align: center;
+  color: var(--body);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.empty-state strong {
+  display: block;
+  font-family: var(--font-display);
+  color: var(--ink);
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.more-btn {
+  display: flex;
+  margin: 20px auto 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Footer (Ollama Minimalist Footer)
+ * --------------------------------------------------------------------------- */
+.site-footer {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  border-top: 1px solid var(--hairline);
+  color: var(--body);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.site-footer p {
+  margin: 0 0 6px;
+}
+
+.site-footer code {
+  font-family: var(--font-mono);
+  background: var(--surface-soft);
+  padding: 2px 6px;
+  border-radius: var(--rounded-sm);
+  color: var(--ink);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 50;
+  transform: translate(-50%, 12px);
+  max-width: min(92vw, 480px);
+  padding: 8px 18px;
+  border-radius: var(--rounded-full);
+  background: var(--surface-dark);
+  color: var(--on-dark);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.is-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------------------------------------------------------------------------
+ * Responsive
+ * --------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .scan-form {
+    flex-direction: column;
+    padding: 8px;
+    border-radius: var(--rounded-lg);
+  }
+
+  .scan-form input {
+    width: 100%;
+    padding: 8px;
+  }
+
+  .scan-form .btn {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .toolbar-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .toolbar-actions .btn {
+    flex: 1;
+  }
+
+  .profile-badge {
+    display: none;
+  }
+}

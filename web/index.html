@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#09090b" />
+    <meta
+      name="description"
+      content="HackMirror：比对你的 X 关注列表和粉丝列表，找出谁没回关你、你没回关谁。"
+    />
+    <title>HackMirror · 谁没回关你</title>
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HackMirror · 谁没回关你" />
+    <meta
+      name="twitter:description"
+      content="比对 X (Twitter) 关注列表与粉丝列表，找出谁没回关你、你没回关谁。零登录更安全，支持 50,000+ 高性能扫描。"
+    />
+    <meta name="twitter:image" content="https://hackmirror.pages.dev/og-image.png" />
+
+    <!-- Open Graph (Facebook, Telegram, Discord, WeChat) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hackmirror.pages.dev/" />
+    <meta property="og:title" content="HackMirror · 谁没回关你" />
+    <meta
+      property="og:description"
+      content="比对 X (Twitter) 关注列表与粉丝列表，找出谁没回关你、你没回关谁。零登录更安全，支持 50,000+ 高性能扫描。"
+    />
+    <meta property="og:image" content="https://hackmirror.pages.dev/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- PWA Manifest & Apple Touch Icon -->
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%9E%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="./">
+        <span class="brand-icon" aria-hidden="true">🦙</span>
+        HackMirror <span>/ inspect</span>
+      </a>
+      <span class="badge-local">Client-first · No login</span>
+    </header>
+
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">X / Twitter 关注关系</p>
+        <h1>HackMirror</h1>
+        <p class="lead">
+          比对你的关注列表和粉丝列表，照出谁没回关你、你没回关谁。
+        </p>
+
+        <form id="scan-form" class="scan-form" autocomplete="off">
+          <label class="sr-only" for="handle">X 用户名</label>
+          <span class="input-prefix" aria-hidden="true">@</span>
+          <input
+            id="handle"
+            name="handle"
+            type="text"
+            placeholder="用户名 或 x.com/用户名"
+            maxlength="200"
+            spellcheck="false"
+            autocapitalize="off"
+            required
+          />
+          <button id="scan-btn" class="btn primary" type="submit">照一照</button>
+        </form>
+
+        <p class="hint">公开数据 · 不用登录 · 默认上限：关注 / 粉丝各 5 万</p>
+      </section>
+
+      <section id="progress-panel" class="panel progress-panel" hidden>
+        <div class="progress-head">
+          <div>
+            <strong id="progress-title">正在照…</strong>
+            <p id="progress-status" class="muted">准备抓取公开名单</p>
+          </div>
+          <button id="cancel-btn" class="btn ghost small" type="button">取消</button>
+        </div>
+
+        <div class="progress-row" data-kind="following">
+          <div class="progress-label">
+            <span>关注</span>
+            <span id="following-count">0 / 0</span>
+          </div>
+          <div class="bar"><i id="following-bar"></i></div>
+        </div>
+
+        <div class="progress-row" data-kind="followers">
+          <div class="progress-label">
+            <span>粉丝</span>
+            <span id="followers-count">0 / 0</span>
+          </div>
+          <div class="bar"><i id="followers-bar"></i></div>
+        </div>
+      </section>
+
+      <section id="error-panel" class="panel error-panel" hidden>
+        <p class="eyebrow danger">照不动</p>
+        <h2 id="error-title">出了点问题</h2>
+        <p id="error-text" class="muted"></p>
+        <button id="retry-btn" class="btn primary" type="button">重试</button>
+      </section>
+
+      <section id="result-panel" class="result-panel" hidden>
+        <div id="profile-card" class="panel profile-card"></div>
+        <div id="stats-grid" class="stats-grid"></div>
+
+        <div class="panel mirror-panel">
+          <div class="result-head">
+            <div>
+              <h2>比对结果</h2>
+              <p id="coverage-note" class="muted small"></p>
+            </div>
+            <button id="refresh-btn" class="btn ghost small" type="button">重新抓取</button>
+          </div>
+
+          <div id="warn-box" class="warn-box" hidden></div>
+
+          <div class="tabs" role="tablist" aria-label="名单">
+            <button
+              class="tab is-active"
+              data-tab="notBack"
+              type="button"
+              role="tab"
+              aria-selected="true"
+            >
+              没回关你 <span id="notback-count">0</span>
+            </button>
+            <button
+              class="tab"
+              data-tab="owe"
+              type="button"
+              role="tab"
+              aria-selected="false"
+            >
+              你没回关 <span id="owe-count">0</span>
+            </button>
+          </div>
+
+          <div class="toolbar">
+            <label class="toggle">
+              <input id="blue-only" type="checkbox" />
+              <span>只看蓝V</span>
+            </label>
+
+            <label class="toggle">
+              <input id="no-blue" type="checkbox" />
+              <span>不看蓝V</span>
+            </label>
+
+            <label class="select-wrap">
+              <span class="sr-only">排序</span>
+              <select id="sort-select">
+                <option value="recent">按关注先后</option>
+                <option value="big">粉丝多的在前</option>
+                <option value="small">粉丝少的在前</option>
+              </select>
+            </label>
+
+            <div class="toolbar-actions">
+              <button id="copy-btn" class="btn ghost small" type="button">复制名单</button>
+              <button id="json-btn" class="btn ghost small" type="button">导出 JSON</button>
+              <button id="csv-btn" class="btn ghost small" type="button">导出 CSV</button>
+            </div>
+          </div>
+
+          <p id="list-note" class="list-note"></p>
+          <ul id="mirror-list" class="mirror-list"></ul>
+          <button id="more-btn" class="btn ghost more-btn" type="button" hidden></button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        数据来自 <code>api.fxtwitter.com</code> 的公开只读接口。被封 / 注销的号不会出现在名单里，
+        抓到人数通常比资料少一点。
+      </p>
+      <p>仅用于分析自己的账号或已获授权的账号。请勿高频抓取。</p>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
