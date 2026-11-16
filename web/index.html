@@ -160,7 +160,7 @@
             <label class="select-wrap">
               <span class="sr-only">排序</span>
               <select id="sort-select">
-                <option value="recent">按关注先后</option>
+                <option value="recent">按关注先后（早 → 晚）</option>
                 <option value="recent-big">时间优先 · 同时间粉丝多在前</option>
                 <option value="big">粉丝多的在前</option>
                 <option value="small">粉丝少的在前</option>
@@ -176,7 +176,10 @@
 
           <p id="list-note" class="list-note"></p>
           <ul id="mirror-list" class="mirror-list"></ul>
-          <button id="more-btn" class="btn ghost more-btn" type="button" hidden></button>
+          <div class="more-actions">
+            <button id="more-btn" class="btn ghost more-btn" type="button" hidden></button>
+            <button id="expand-all-btn" class="btn ghost more-btn" type="button" hidden>展开所有</button>
+          </div>
         </div>
       </section>
     </main>

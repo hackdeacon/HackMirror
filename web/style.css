@@ -873,9 +873,17 @@ select:focus {
   margin-bottom: 4px;
 }
 
+.more-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px auto 0;
+}
+
 .more-btn {
   display: flex;
-  margin: 20px auto 0;
+  margin: 0;
 }
 
 /* ---------------------------------------------------------------------------

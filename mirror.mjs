@@ -52,7 +52,7 @@ function sortLabelOf(mode) {
   if (mode === 'big') return '粉丝多的在前';
   if (mode === 'small') return '粉丝少的在前';
   if (mode === 'recent-big') return '时间优先 · 同时间粉丝多在前';
-  return '按关注先后';
+  return '按关注先后（早→晚）';
 }
 
 function printSection(title, list, opts) {
@@ -128,7 +128,7 @@ async function main() {
   --blue                 只看蓝V
   --no-blue              不看蓝V（只列非蓝V）
   --sort <recent|big|small|recent-big>
-                         关注先后（默认）/ 粉丝多在前 / 粉丝少在前
+                         关注先后（早→晚，默认）/ 粉丝多在前 / 粉丝少在前
                          recent-big：时间优先，同时间粉丝多在前
   --limit <n>            每栏显示前 n 条，0 = 全部，默认 40
   --workers <n>          每份名单并发数，默认 4

@@ -75,6 +75,7 @@
   const listNote = $('#list-note');
   const mirrorList = $('#mirror-list');
   const moreBtn = $('#more-btn');
+  const expandAllBtn = $('#expand-all-btn');
   const toast = $('#toast');
   const followingCountEl = $('#following-count');
   const followersCountEl = $('#followers-count');
@@ -467,18 +468,25 @@
 
   // 预计算 orderMid 并缓存，避免排序时重复计算
   function cmpRecent(a, b) {
+    const ao = !!a.hasOrder;
+    const bo = !!b.hasOrder;
+    if (ao !== bo) return ao ? -1 : 1;
     const am = a._mid ?? (a._mid = orderMid(a));
     const bm = b._mid ?? (b._mid = orderMid(b));
-    if (am !== bm) return am > bm ? -1 : 1;
+    // 时间从早到晚：先关注的在上，后关注的在下
+    if (am !== bm) return am < bm ? -1 : 1;
     if (a.idx !== b.idx) return a.idx - b.idx;
     return a.handle.localeCompare(b.handle);
   }
 
   // 时间优先 + 粉丝数次优先；索引和用户名兜底，保证顺序确定
   function cmpRecentBig(a, b) {
+    const ao = !!a.hasOrder;
+    const bo = !!b.hasOrder;
+    if (ao !== bo) return ao ? -1 : 1;
     const am = a._mid ?? (a._mid = orderMid(a));
     const bm = b._mid ?? (b._mid = orderMid(b));
-    if (am !== bm) return am > bm ? -1 : 1;
+    if (am !== bm) return am < bm ? -1 : 1;
     if (a.followers !== b.followers) return b.followers - a.followers;
     if (a.idx !== b.idx) return a.idx - b.idx;
     return a.handle.localeCompare(b.handle);
@@ -1386,8 +1394,10 @@
       moreBtn.textContent = `再显示 ${fmt(Math.min(PAGE_STEP, remaining))} 位（共 ${fmt(
         filtered.length,
       )} 位）`;
+      expandAllBtn.hidden = false;
     } else {
       moreBtn.hidden = true;
+      expandAllBtn.hidden = true;
     }
   }
 
@@ -1775,6 +1785,11 @@
 
   moreBtn.addEventListener('click', () => {
     state.limit += PAGE_STEP;
+    renderList();
+  });
+
+  expandAllBtn.addEventListener('click', () => {
+    state.limit = getFiltered().length;
     renderList();
   });
 
