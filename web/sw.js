@@ -1,10 +1,11 @@
 // HackMirror Service Worker
-const CACHE_NAME = 'hackmirror-v4';
+const VERSION = '5';
+const CACHE_NAME = `hackmirror-v${VERSION}`;
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/style.css',
-  '/app.js',
+  `/style.css?v=${VERSION}`,
+  `/app.js?v=${VERSION}`,
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -37,38 +38,27 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== location.origin) return;
 
-  // 页面导航：网络优先，保证发布后立刻看到新版本；离线时回退缓存
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() =>
-          caches.match(event.request).then((cached) => cached || caches.match('/index.html'))
-        )
-    );
-    return;
-  }
-
-  // 其他静态资源：先用缓存，同时后台刷新
+  // 全部网络优先：避免 HTML 与 JS 版本不一致；离线时回退缓存
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => cached);
-
-      return cached || fetchPromise;
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.mode === 'navigate') {
+          const shell = await caches.match('/index.html');
+          if (shell) return shell;
+        }
+        return new Response('离线', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        });
+      })
   );
 });
