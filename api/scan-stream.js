@@ -15,6 +15,7 @@
  */
 
 import {
+  BIG_FANS,
   normalizeHandle,
   createClient,
   fetchProfile,
@@ -51,6 +52,7 @@ export default async function handler(req, res) {
   const blueParam = url.searchParams.get('blue');
   const blueOnly = blueParam === '1';
   const noBlue = blueParam === '0';
+  const noBig = ['1', 'true'].includes(url.searchParams.get('noBig') || '');
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
@@ -154,6 +156,10 @@ export default async function handler(req, res) {
     } else if (noBlue) {
       out.notBack = out.notBack.filter((u) => !u.verified);
       out.owe = out.owe.filter((u) => !u.verified);
+    }
+    if (noBig) {
+      out.notBack = out.notBack.filter((u) => u.followers < BIG_FANS);
+      out.owe = out.owe.filter((u) => u.followers < BIG_FANS);
     }
 
     send({ type: 'result', data: out });

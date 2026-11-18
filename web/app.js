@@ -35,6 +35,7 @@
   const MAX_FOLLOWING = 50000;
   const MAX_FOLLOWERS = 50000;
   const MAX_PAGES = 5000;
+  const BIG_FANS = 10000;
   const WORKERS = 4;
   const RPS = 8;
   const PAGE_SIZE = 60;
@@ -68,6 +69,7 @@
   const oweCount = $('#owe-count');
   const blueOnly = $('#blue-only');
   const noBlue = $('#no-blue');
+  const noBig = $('#no-big');
   const sortSelect = $('#sort-select');
   const copyBtn = $('#copy-btn');
   const jsonBtn = $('#json-btn');
@@ -95,6 +97,7 @@
     tab: 'notBack',
     blueOnly: false,
     noBlue: false,
+    noBig: false,
     sort: 'recent',
     limit: PAGE_SIZE,
     lastHandle: '',
@@ -1309,12 +1312,13 @@
 
   function getFiltered() {
     if (!state.scan) return [];
-    // 缓存键：tab + blueOnly + noBlue + sort，扫描数据不变时直接复用
-    const key = `${state.tab}|${state.blueOnly}|${state.noBlue}|${state.sort}`;
+    // 缓存键：tab + blueOnly + noBlue + noBig + sort，扫描数据不变时直接复用
+    const key = `${state.tab}|${state.blueOnly}|${state.noBlue}|${state.noBig}|${state.sort}`;
     if (state._filteredKey === key && state._filteredCache) return state._filteredCache;
     let list = state.scan[state.tab] || [];
     if (state.blueOnly) list = list.filter((u) => u.verified);
     if (state.noBlue) list = list.filter((u) => !u.verified);
+    if (state.noBig) list = list.filter((u) => u.followers < BIG_FANS);
     const result = sortUsers(list, state.sort);
     state._filteredCache = result;
     state._filteredKey = key;
@@ -1346,6 +1350,9 @@
         } else if (state.noBlue) {
           strong.textContent = '这里全是蓝V';
           p.textContent = '没有非蓝V账号，取消“不看蓝V”再看看。';
+        } else if (state.noBig) {
+          strong.textContent = '这里没有万粉以下的账号';
+          p.textContent = '全部都是万粉及以上，取消“不看万粉”再看看。';
         } else if (state.tab === 'notBack') {
           strong.textContent = '全都回关了，道心通明';
           p.textContent = '没有找到关注了但没回关你的账号。';
@@ -1385,6 +1392,9 @@
     ];
     if (state.blueOnly) bits.push(`蓝V ${fmt(blueCount)} 人`);
     if (state.noBlue) bits.push(`非蓝V ${fmt(all.length - blueCount)} 人`);
+    if (state.noBig) {
+      bits.push(`万粉以下 ${fmt(all.filter((u) => u.followers < BIG_FANS).length)} 人`);
+    }
     bits.push('被封/注销号不在名单里');
     listNote.textContent = bits.join(' · ');
 
@@ -1458,11 +1468,13 @@
     state.tab = 'notBack';
     state.blueOnly = false;
     state.noBlue = false;
+    state.noBig = false;
     state.sort = 'recent';
     state.limit = PAGE_SIZE;
     invalidateFilteredCache();
     blueOnly.checked = false;
     noBlue.checked = false;
+    noBig.checked = false;
     sortSelect.value = 'recent';
 
     renderProfile(scan, fromCache);
@@ -1771,6 +1783,12 @@
       blueOnly.checked = false;
       state.blueOnly = false;
     }
+    state.limit = PAGE_SIZE;
+    renderList();
+  });
+
+  noBig.addEventListener('change', () => {
+    state.noBig = noBig.checked;
     state.limit = PAGE_SIZE;
     renderList();
   });

@@ -162,6 +162,7 @@ curl 'https://your-app.vercel.app/api/scan?u=someuser&blue=0'   # 不看蓝V
 | `u` / `handle` | 必填，支持 `@xxx` 或 `x.com/xxx` |
 | `sort` | `recent`（默认）/ `big` / `small` / `recent-big`（时间优先，同时间粉丝多在前） |
 | `blue` | 不传=全部；`1`=只看蓝V；`0`=不看蓝V（只列非蓝V） |
+| `noBig` | `1`=不看万粉及以上（粉丝 ≥ 1 万） |
 
 ### `GET /api/scan-stream?u=用户名`
 

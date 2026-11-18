@@ -1,5 +1,5 @@
 // HackMirror Service Worker
-const CACHE_NAME = 'hackmirror-v3';
+const CACHE_NAME = 'hackmirror-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

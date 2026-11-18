@@ -18,6 +18,7 @@ import { dirname, join } from 'node:path';
 
 import {
   API,
+  BIG_FANS,
   normalizeHandle,
   fmt,
   compact,
@@ -30,16 +31,20 @@ import {
 
 const TWITTER = 'https://x.com';
 
-function filterBlue(list, opts) {
-  if (opts.blue) return list.filter((u) => u.verified);
-  if (opts.noBlue) return list.filter((u) => !u.verified);
-  return list;
+function filterUsers(list, opts) {
+  let out = list;
+  if (opts.blue) out = out.filter((u) => u.verified);
+  else if (opts.noBlue) out = out.filter((u) => !u.verified);
+  if (opts.noBig) out = out.filter((u) => u.followers < BIG_FANS);
+  return out;
 }
 
-function blueLabel(opts) {
-  if (opts.blue) return '（只看蓝V）';
-  if (opts.noBlue) return '（不看蓝V）';
-  return '';
+function filterLabel(opts) {
+  const parts = [];
+  if (opts.blue) parts.push('只看蓝V');
+  if (opts.noBlue) parts.push('不看蓝V');
+  if (opts.noBig) parts.push('不看万粉');
+  return parts.length ? `（${parts.join('、')}）` : '';
 }
 
 function userRow(u, i) {
@@ -56,11 +61,11 @@ function sortLabelOf(mode) {
 }
 
 function printSection(title, list, opts) {
-  const filtered = filterBlue(list, opts);
+  const filtered = filterUsers(list, opts);
   const sorted = sortUsers(filtered, opts.sort);
   const shown = opts.limit > 0 ? sorted.slice(0, opts.limit) : sorted;
   const sortLabel = sortLabelOf(opts.sort);
-  console.log(`\n【${title}】${fmt(filtered.length)} 人${blueLabel(opts)} · ${sortLabel}`);
+  console.log(`\n【${title}】${fmt(filtered.length)} 人${filterLabel(opts)} · ${sortLabel}`);
   if (!shown.length) {
     console.log('  （空）');
     return;
@@ -91,6 +96,7 @@ async function main() {
     options: {
       blue: { type: 'boolean', default: false },
       'no-blue': { type: 'boolean', default: false },
+      'no-big': { type: 'boolean', default: false },
       sort: { type: 'string', default: 'recent' },
       limit: { type: 'string', default: '40' },
       workers: { type: 'string', default: '4' },
@@ -127,6 +133,7 @@ async function main() {
 选项:
   --blue                 只看蓝V
   --no-blue              不看蓝V（只列非蓝V）
+  --no-big               不看万粉及以上（粉丝 ≥ 1 万）
   --sort <recent|big|small|recent-big>
                          关注先后（早→晚，默认）/ 粉丝多在前 / 粉丝少在前
                          recent-big：时间优先，同时间粉丝多在前
@@ -164,6 +171,7 @@ async function main() {
   const opts = {
     blue: values.blue && !values['no-blue'],
     noBlue: values['no-blue'] && !values.blue,
+    noBig: !!values['no-big'],
     sort: ['recent', 'big', 'small', 'recent-big'].includes(values.sort) ? values.sort : 'recent',
     limit: Math.max(0, parseInt(values.limit, 10) || 0),
     workers: Math.min(16, Math.max(1, parseInt(values.workers, 10) || 4)),
@@ -321,10 +329,10 @@ function printSummary(payload, opts) {
 }
 
 function printSectionFromJson(title, list, opts) {
-  const filtered = filterBlue(list, opts);
+  const filtered = filterUsers(list, opts);
   const sortLabel = sortLabelOf(opts.sort);
   const shown = opts.limit > 0 ? filtered.slice(0, opts.limit) : filtered;
-  console.log(`\n【${title}】${fmt(filtered.length)} 人${blueLabel(opts)} · ${sortLabel}`);
+  console.log(`\n【${title}】${fmt(filtered.length)} 人${filterLabel(opts)} · ${sortLabel}`);
   if (!shown.length) {
     console.log('  （空）');
     return;

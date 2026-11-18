@@ -1,13 +1,14 @@
 /**
  * Vercel Serverless Function: 同步扫描
  *
- * GET /api/scan?u=someuser&sort=recent&blue=1   （sort: recent|big|small|recent-big；blue=1 只看蓝V，blue=0 不看蓝V）
+ * GET /api/scan?u=someuser&sort=recent&blue=1&noBig=1   （sort: recent|big|small|recent-big；blue=1 只看蓝V，blue=0 不看蓝V；noBig=1 不看万粉）
  *
  * 限制：Vercel 免费版单次函数最长执行时间有限（Hobby 约 60s，Pro 300s）。
  * 万级账号可能超时，建议用 /api/scan-stream 或命令行版。
  */
 
 import {
+  BIG_FANS,
   normalizeHandle,
   runScan,
   buildResult,
@@ -44,6 +45,7 @@ export default async function handler(req, res) {
   const blueParam = url.searchParams.get('blue');
   const blueOnly = blueParam === '1';
   const noBlue = blueParam === '0';
+  const noBig = ['1', 'true'].includes(url.searchParams.get('noBig') || '');
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
@@ -84,6 +86,10 @@ export default async function handler(req, res) {
     } else if (noBlue) {
       out.notBack = out.notBack.filter((u) => !u.verified);
       out.owe = out.owe.filter((u) => !u.verified);
+    }
+    if (noBig) {
+      out.notBack = out.notBack.filter((u) => u.followers < BIG_FANS);
+      out.owe = out.owe.filter((u) => u.followers < BIG_FANS);
     }
     res.statusCode = 200;
     return res.end(JSON.stringify(out));
