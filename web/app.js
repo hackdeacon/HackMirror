@@ -1236,7 +1236,7 @@
     profileCard.appendChild(badge);
   }
 
-  function statCard(label, value, extraClass = '') {
+  function statCard(label, value, extraClass = '', sub = '') {
     const el = document.createElement('div');
     el.className = `stat-card ${extraClass}`.trim();
     const l = document.createElement('span');
@@ -1245,6 +1245,12 @@
     const v = document.createElement('strong');
     v.textContent = value;
     el.append(l, v);
+    if (sub) {
+      const s = document.createElement('span');
+      s.className = 'stat-sub';
+      s.textContent = sub;
+      el.appendChild(s);
+    }
     return el;
   }
 
@@ -1259,11 +1265,23 @@
   }
 
   function renderStats(scan) {
+    const notBackBlue = scan.notBack.filter((u) => u.verified).length;
+    const oweBlue = scan.owe.filter((u) => u.verified).length;
     statsGrid.replaceChildren(
       statCard('互关', fmt(scan.mutual), 'accent'),
       statCard('回关率', pct(scan.rate), 'blue'),
-      statCard('没回关你', fmt(scan.notBack.length), 'danger'),
-      statCard('你没回关', fmt(scan.owe.length)),
+      statCard(
+        '没回关你',
+        fmt(scan.notBack.length),
+        'danger',
+        `蓝V ${fmt(notBackBlue)} · 非蓝V ${fmt(scan.notBack.length - notBackBlue)}`,
+      ),
+      statCard(
+        '你没回关',
+        fmt(scan.owe.length),
+        '',
+        `蓝V ${fmt(oweBlue)} · 非蓝V ${fmt(scan.owe.length - oweBlue)}`,
+      ),
     );
   }
 

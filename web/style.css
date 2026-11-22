@@ -573,6 +573,14 @@ body {
   color: var(--ink);
 }
 
+.stat-card .stat-sub {
+  display: block;
+  margin-top: 6px;
+  color: var(--mute);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 /* Inverted Card (Ollama style highlight) */
 .stat-card.accent {
   background: var(--accent-card-bg);
