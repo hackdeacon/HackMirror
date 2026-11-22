@@ -32,6 +32,9 @@
   const MIN_SPLIT = 4194304000n; // 1 秒的 snowflake 跨度
   const CACHE_VERSION = 5;
   const CACHE_TTL = 30 * 60 * 1000;
+  const VISITED_KEY = 'hackmirror:visited:v1';
+  const MARK_VISITED_KEY = 'hackmirror:mark-visited';
+  const VISITED_LIMIT = 20000;
   const MAX_FOLLOWING = 50000;
   const MAX_FOLLOWERS = 50000;
   const MAX_PAGES = 5000;
@@ -71,6 +74,8 @@
   const noBlue = $('#no-blue');
   const noBig = $('#no-big');
   const noLock = $('#no-lock');
+  const markVisitedToggle = $('#mark-visited');
+  const clearVisitedBtn = $('#clear-visited');
   const sortSelect = $('#sort-select');
   const copyBtn = $('#copy-btn');
   const jsonBtn = $('#json-btn');
@@ -89,6 +94,47 @@
   // 状态
   // -------------------------------------------------------------------------
 
+  function loadVisited() {
+    try {
+      const raw = localStorage.getItem(VISITED_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr.map(String) : []);
+    } catch {
+      return new Set();
+    }
+  }
+
+  function saveVisited() {
+    try {
+      localStorage.setItem(VISITED_KEY, JSON.stringify([...state.visited]));
+    } catch {}
+  }
+
+  function loadMarkVisited() {
+    try {
+      return localStorage.getItem(MARK_VISITED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function saveMarkVisited() {
+    try {
+      localStorage.setItem(MARK_VISITED_KEY, state.markVisited ? '1' : '0');
+    } catch {}
+  }
+
+  function recordVisited(id) {
+    if (!id) return;
+    state.visited.delete(id);
+    state.visited.add(id);
+    while (state.visited.size > VISITED_LIMIT) {
+      const first = state.visited.values().next().value;
+      state.visited.delete(first);
+    }
+    saveVisited();
+  }
+
   const state = {
     scanning: false,
     abort: null,
@@ -100,6 +146,8 @@
     noBlue: false,
     noBig: false,
     noLock: false,
+    markVisited: loadMarkVisited(),
+    visited: loadVisited(),
     sort: 'recent',
     limit: PAGE_SIZE,
     lastHandle: '',
@@ -1438,6 +1486,17 @@
       moreBtn.hidden = true;
       expandAllBtn.hidden = true;
     }
+
+    syncVisitedClasses();
+  }
+
+  function syncVisitedClasses() {
+    for (const li of mirrorList.children) {
+      const id = li.dataset.id;
+      if (!id) continue;
+      li.classList.toggle('is-visited', state.markVisited && state.visited.has(id));
+    }
+    clearVisitedBtn.hidden = !state.markVisited || state.visited.size === 0;
   }
 
   function createRow(u) {
@@ -1483,7 +1542,13 @@
     chevron.className = 'chevron';
     chevron.setAttribute('aria-hidden', 'true');
     chevron.textContent = '›';
-    a.appendChild(chevron);
+
+    const visitedBadge = document.createElement('span');
+    visitedBadge.className = 'visited-badge';
+    visitedBadge.setAttribute('aria-hidden', 'true');
+    visitedBadge.textContent = '已看';
+
+    a.append(visitedBadge, chevron);
 
     li.appendChild(a);
     return li;
@@ -1832,6 +1897,34 @@
     renderList();
   });
 
+  markVisitedToggle.addEventListener('change', () => {
+    state.markVisited = markVisitedToggle.checked;
+    saveMarkVisited();
+    renderList();
+  });
+
+  clearVisitedBtn.addEventListener('click', () => {
+    state.visited.clear();
+    saveVisited();
+    renderList();
+    showToast('已清除已看标记');
+  });
+
+  function handleRowOpen(e) {
+    if (!state.markVisited) return;
+    const target = e.target instanceof Element ? e.target : null;
+    const a = target?.closest('a');
+    if (!a) return;
+    const li = a.closest('li[data-id]');
+    if (!li) return;
+    recordVisited(li.dataset.id);
+    li.classList.add('is-visited');
+    clearVisitedBtn.hidden = state.visited.size === 0;
+  }
+
+  mirrorList.addEventListener('click', handleRowOpen);
+  mirrorList.addEventListener('auxclick', handleRowOpen);
+
   sortSelect.addEventListener('change', () => {
     state.sort = ['recent', 'big', 'small', 'recent-big'].includes(sortSelect.value)
       ? sortSelect.value
@@ -1909,6 +2002,7 @@
   }
 
   updateFormState();
+  markVisitedToggle.checked = state.markVisited;
 
   const q = new URLSearchParams(location.search).get('u');
   if (q) {

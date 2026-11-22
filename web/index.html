@@ -37,7 +37,7 @@
     <link rel="apple-touch-icon" href="./icon-192.png" />
 
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%9E%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./style.css?v=8" />
+    <link rel="stylesheet" href="./style.css?v=9" />
   </head>
   <body>
     <div class="page-glow" aria-hidden="true"></div>
@@ -167,6 +167,11 @@
               <span>不看锁推</span>
             </label>
 
+            <label class="toggle">
+              <input id="mark-visited" type="checkbox" />
+              <span>标记已点击</span>
+            </label>
+
             <label class="select-wrap">
               <span class="sr-only">排序</span>
               <select id="sort-select">
@@ -178,6 +183,7 @@
             </label>
 
             <div class="toolbar-actions">
+              <button id="clear-visited" class="btn ghost small" type="button" hidden>清除已看</button>
               <button id="copy-btn" class="btn ghost small" type="button">复制名单</button>
               <button id="json-btn" class="btn ghost small" type="button">导出 JSON</button>
               <button id="csv-btn" class="btn ghost small" type="button">导出 CSV</button>
@@ -204,6 +210,6 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <script src="./app.js?v=8" defer></script>
+    <script src="./app.js?v=9" defer></script>
   </body>
 </html>

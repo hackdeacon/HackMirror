@@ -785,6 +785,35 @@ select:focus {
   box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
+/* 已点击标记：灰度 + 已看角标 */
+.mirror-item.is-visited .avatar,
+.mirror-item.is-visited .item-main {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+.mirror-item.is-visited a:hover .avatar,
+.mirror-item.is-visited a:hover .item-main {
+  opacity: 0.75;
+}
+
+.visited-badge {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--rounded-full);
+  color: var(--mute);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.mirror-item.is-visited .visited-badge {
+  display: inline-flex;
+}
+
 .avatar {
   width: 40px;
   height: 40px;
