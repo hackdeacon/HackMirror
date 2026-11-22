@@ -53,6 +53,7 @@ export default async function handler(req, res) {
   const blueOnly = blueParam === '1';
   const noBlue = blueParam === '0';
   const noBig = ['1', 'true'].includes(url.searchParams.get('noBig') || '');
+  const noLock = ['1', 'true'].includes(url.searchParams.get('noLock') || '');
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
@@ -160,6 +161,10 @@ export default async function handler(req, res) {
     if (noBig) {
       out.notBack = out.notBack.filter((u) => u.followers < BIG_FANS);
       out.owe = out.owe.filter((u) => u.followers < BIG_FANS);
+    }
+    if (noLock) {
+      out.notBack = out.notBack.filter((u) => !u.protected);
+      out.owe = out.owe.filter((u) => !u.protected);
     }
 
     send({ type: 'result', data: out });

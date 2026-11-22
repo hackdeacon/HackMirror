@@ -5,7 +5,7 @@
 - **没回关你**：你关注了 TA，TA 没关注你
 - **你没回关**：TA 关注了你，你还没关注 TA
 - **互关人数 / 回关率**
-- **只看蓝V / 不看蓝V / 不看万粉**
+- **只看蓝V / 不看蓝V / 不看万粉 / 不看锁推**
 - **按关注先后 / 粉丝数排序**
 - **导出 JSON / CSV**
 
@@ -55,6 +55,7 @@ node mirror.mjs <用户名> --blue --sort big
 node mirror.mjs <用户名> --sort recent-big
 node mirror.mjs <用户名> --no-blue
 node mirror.mjs <用户名> --no-big
+node mirror.mjs <用户名> --no-lock
 node mirror.mjs <用户名> --limit 0 --json out.json
 node mirror.mjs <用户名> --api https://api.你的域名.com
 ```
@@ -99,6 +100,7 @@ vercel --prod
 | `--blue` | 只看蓝V（`verification.verified`） |
 | `--no-blue` | 不看蓝V（只列非蓝V） |
 | `--no-big` | 不看万粉及以上（粉丝 ≥ 1 万） |
+| `--no-lock` | 不看锁推账号 |
 | `--sort recent\|big\|small\|recent-big` | 关注先后（早→晚） / 粉丝多在前 / 粉丝少在前 / 时间优先且同时间粉丝多在前，默认 `recent` |
 | `--limit n` | 每栏显示前 n 条，`0` 为全部，默认 40 |
 | `--workers n` | 每份名单的并发数，默认 4 |

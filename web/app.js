@@ -30,7 +30,7 @@
   const TWITTER_EPOCH = 1288834974657n;
   const ID_SHIFT = 22n;
   const MIN_SPLIT = 4194304000n; // 1 秒的 snowflake 跨度
-  const CACHE_VERSION = 3;
+  const CACHE_VERSION = 4;
   const CACHE_TTL = 30 * 60 * 1000;
   const MAX_FOLLOWING = 50000;
   const MAX_FOLLOWERS = 50000;
@@ -70,6 +70,7 @@
   const blueOnly = $('#blue-only');
   const noBlue = $('#no-blue');
   const noBig = $('#no-big');
+  const noLock = $('#no-lock');
   const sortSelect = $('#sort-select');
   const copyBtn = $('#copy-btn');
   const jsonBtn = $('#json-btn');
@@ -98,6 +99,7 @@
     blueOnly: false,
     noBlue: false,
     noBig: false,
+    noLock: false,
     sort: 'recent',
     limit: PAGE_SIZE,
     lastHandle: '',
@@ -955,6 +957,7 @@
       tweets: u.tweets || 0,
       verified: !!u.verified,
       org: !!u.org,
+      protected: !!u.protected,
       hi: 0n,
       lo: 0n,
       idx: 0,
@@ -1312,13 +1315,14 @@
 
   function getFiltered() {
     if (!state.scan) return [];
-    // 缓存键：tab + blueOnly + noBlue + noBig + sort，扫描数据不变时直接复用
-    const key = `${state.tab}|${state.blueOnly}|${state.noBlue}|${state.noBig}|${state.sort}`;
+    // 缓存键：tab + blueOnly + noBlue + noBig + noLock + sort，扫描数据不变时直接复用
+    const key = `${state.tab}|${state.blueOnly}|${state.noBlue}|${state.noBig}|${state.noLock}|${state.sort}`;
     if (state._filteredKey === key && state._filteredCache) return state._filteredCache;
     let list = state.scan[state.tab] || [];
     if (state.blueOnly) list = list.filter((u) => u.verified);
     if (state.noBlue) list = list.filter((u) => !u.verified);
     if (state.noBig) list = list.filter((u) => u.followers < BIG_FANS);
+    if (state.noLock) list = list.filter((u) => !u.protected);
     const result = sortUsers(list, state.sort);
     state._filteredCache = result;
     state._filteredKey = key;
@@ -1353,6 +1357,9 @@
         } else if (state.noBig) {
           strong.textContent = '这里没有万粉以下的账号';
           p.textContent = '全部都是万粉及以上，取消“不看万粉”再看看。';
+        } else if (state.noLock) {
+          strong.textContent = '这里没有非锁推账号';
+          p.textContent = '这里都是锁推账号，取消“不看锁推”再看看。';
         } else if (state.tab === 'notBack') {
           strong.textContent = '全都回关了，道心通明';
           p.textContent = '没有找到关注了但没回关你的账号。';
@@ -1394,6 +1401,9 @@
     if (state.noBlue) bits.push(`非蓝V ${fmt(all.length - blueCount)} 人`);
     if (state.noBig) {
       bits.push(`万粉以下 ${fmt(all.filter((u) => u.followers < BIG_FANS).length)} 人`);
+    }
+    if (state.noLock) {
+      bits.push(`锁推 ${fmt(all.filter((u) => u.protected).length)} 人`);
     }
     bits.push('被封/注销号不在名单里');
     listNote.textContent = bits.join(' · ');
@@ -1469,12 +1479,14 @@
     state.blueOnly = false;
     state.noBlue = false;
     state.noBig = false;
+    state.noLock = false;
     state.sort = 'recent';
     state.limit = PAGE_SIZE;
     invalidateFilteredCache();
     blueOnly.checked = false;
     noBlue.checked = false;
     noBig.checked = false;
+    noLock.checked = false;
     sortSelect.value = 'recent';
 
     renderProfile(scan, fromCache);
@@ -1557,6 +1569,7 @@
       tweets: u.tweets,
       verified: u.verified,
       org: u.org,
+      protected: !!u.protected,
       orderKey: orderMid(u).toString(),
     };
   }
@@ -1568,6 +1581,7 @@
       name: u.name,
       followers: u.followers,
       verified: u.verified,
+      protected: !!u.protected,
     };
   }
 
@@ -1789,6 +1803,12 @@
 
   noBig.addEventListener('change', () => {
     state.noBig = noBig.checked;
+    state.limit = PAGE_SIZE;
+    renderList();
+  });
+
+  noLock.addEventListener('change', () => {
+    state.noLock = noLock.checked;
     state.limit = PAGE_SIZE;
     renderList();
   });

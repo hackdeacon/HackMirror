@@ -36,6 +36,7 @@ function filterUsers(list, opts) {
   if (opts.blue) out = out.filter((u) => u.verified);
   else if (opts.noBlue) out = out.filter((u) => !u.verified);
   if (opts.noBig) out = out.filter((u) => u.followers < BIG_FANS);
+  if (opts.noLock) out = out.filter((u) => !u.protected);
   return out;
 }
 
@@ -44,6 +45,7 @@ function filterLabel(opts) {
   if (opts.blue) parts.push('只看蓝V');
   if (opts.noBlue) parts.push('不看蓝V');
   if (opts.noBig) parts.push('不看万粉');
+  if (opts.noLock) parts.push('不看锁推');
   return parts.length ? `（${parts.join('、')}）` : '';
 }
 
@@ -97,6 +99,7 @@ async function main() {
       blue: { type: 'boolean', default: false },
       'no-blue': { type: 'boolean', default: false },
       'no-big': { type: 'boolean', default: false },
+      'no-lock': { type: 'boolean', default: false },
       sort: { type: 'string', default: 'recent' },
       limit: { type: 'string', default: '40' },
       workers: { type: 'string', default: '4' },
@@ -134,6 +137,7 @@ async function main() {
   --blue                 只看蓝V
   --no-blue              不看蓝V（只列非蓝V）
   --no-big               不看万粉及以上（粉丝 ≥ 1 万）
+  --no-lock              不看锁推账号
   --sort <recent|big|small|recent-big>
                          关注先后（早→晚，默认）/ 粉丝多在前 / 粉丝少在前
                          recent-big：时间优先，同时间粉丝多在前
@@ -172,6 +176,7 @@ async function main() {
     blue: values.blue && !values['no-blue'],
     noBlue: values['no-blue'] && !values.blue,
     noBig: !!values['no-big'],
+    noLock: !!values['no-lock'],
     sort: ['recent', 'big', 'small', 'recent-big'].includes(values.sort) ? values.sort : 'recent',
     limit: Math.max(0, parseInt(values.limit, 10) || 0),
     workers: Math.min(16, Math.max(1, parseInt(values.workers, 10) || 4)),
