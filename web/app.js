@@ -30,7 +30,7 @@
   const TWITTER_EPOCH = 1288834974657n;
   const ID_SHIFT = 22n;
   const MIN_SPLIT = 4194304000n; // 1 秒的 snowflake 跨度
-  const CACHE_VERSION = 4;
+  const CACHE_VERSION = 5;
   const CACHE_TTL = 30 * 60 * 1000;
   const MAX_FOLLOWING = 50000;
   const MAX_FOLLOWERS = 50000;
@@ -408,6 +408,7 @@
       tweets: Number(raw?.statuses ?? raw?.tweets) || 0,
       verified: !!raw?.verification?.verified,
       org: vType === 'business' || vType === 'government',
+      protected: !!raw?.protected,
       hi: 0n,
       lo: 0n,
       idx: 0,
