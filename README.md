@@ -5,16 +5,17 @@
 - **没回关你**：你关注了 TA，TA 没关注你
 - **你没回关**：TA 关注了你，你还没关注 TA
 - **互关人数 / 回关率**
-- **只看蓝V / 不看蓝V / 不看万粉 / 不看锁推**
-- **按关注先后 / 粉丝数排序**
-- **导出 JSON / CSV**
+- **蓝V / 非蓝V 拆分统计**
+- **筛选**：只看蓝V、不看蓝V、不看万粉（≥ 1 万）、不看锁推
+- **排序**：按关注先后（早 → 晚）、时间优先 + 同时间粉丝多、粉丝多在前、粉丝少在前
+- **展开所有 / 复制名单 / 导出 JSON / CSV**
 
-只读取公开资料，不需要登录、Cookie 或 token。关注和粉丝各默认支持 5 万（可调），适合万级账号。
+只读取公开资料，不需要登录、Cookie 或 token。关注和粉丝默认各支持 5 万（可调），适合万级账号。
 
 ## 架构
 
 ```text
-web/          纯静态前端（无构建），同时提供 Web 界面和 PWA
+web/          纯静态前端（无构建），提供 Web 界面和 PWA
 api/          Vercel Serverless Functions
 lib/          共享核心：抓取、cursor 二分、比对
 mirror.mjs    命令行，复用同一核心
@@ -47,7 +48,31 @@ mirror.mjs    命令行，复用同一核心
 ./start.sh --api-port=8888 # 换 API 端口
 ```
 
-### 命令行
+## Web 版
+
+输入 `@用户名` 或 `x.com/用户名` 即可扫描，结果分两个标签页：
+
+- **没回关你**：你关注了但 TA 没回关
+- **你没回关**：TA 关注了你但你没回关
+
+工具栏支持：
+
+| 功能 | 说明 |
+| --- | --- |
+| 只看蓝V | 只显示 `verification.verified === true` |
+| 不看蓝V | 只显示非蓝V |
+| 不看万粉 | 隐藏粉丝数 ≥ 10,000 的账号（9,999 保留） |
+| 不看锁推 | 隐藏 `protected === true` 的账号，适合过滤无法回关的锁推号 |
+| 排序 | 关注先后（早→晚）/ 时间优先 + 同时间粉丝多在前 / 粉丝多在前 / 粉丝少在前 |
+| 展开所有 | 一次显示剩余全部，不用反复点「再显示」 |
+| 复制名单 | 跟随当前筛选和排序 |
+| 导出 JSON / CSV | 完整差集，**不受**页面筛选影响 |
+
+统计卡片会显示「没回关你 / 你没回关」的总数，以及其中的蓝V / 非蓝V人数。
+
+页面是 PWA：资源网络优先、离线可回退缓存；有 IndexedDB 结果缓存（30 分钟），刷新页面不用重新抓。
+
+## 命令行
 
 ```bash
 node mirror.mjs <用户名>
@@ -68,7 +93,35 @@ node scripts/check.mjs <用户名>
 
 逐个检查 3 个必需接口是否可用。
 
-### 部署到 Vercel
+## API
+
+Vercel Functions 提供三个端点：
+
+| 端点 | 说明 |
+| --- | --- |
+| `GET /api/scan?u=用户名` | 同步返回完整 JSON |
+| `GET /api/scan-stream?u=用户名` | NDJSON 流式返回，带进度 |
+| `GET /api/health` | 健康检查，`?probe=1&u=用户名` 可验证上游连通性 |
+
+`/api/scan` 与 `/api/scan-stream` 支持：
+
+| 参数 | 说明 |
+| --- | --- |
+| `u` / `handle` | 必填，支持 `@用户名` 或 `x.com/用户名` |
+| `sort` | `recent`（默认）/ `big` / `small` / `recent-big` |
+| `blue` | `1` 只看蓝V；`0` 不看蓝V；不传为全部 |
+| `noBig` | `1` 不看万粉及以上（粉丝 ≥ 1 万） |
+| `noLock` | `1` 不看锁推账号 |
+
+示例：
+
+```bash
+curl 'https://your-app.vercel.app/api/scan?u=someuser&sort=recent-big&blue=1&noBig=1&noLock=1'
+```
+
+## 部署
+
+Vercel：
 
 ```bash
 vercel login
@@ -77,6 +130,8 @@ vercel --prod
 
 详见 [`DEPLOY-VERCEL.md`](./DEPLOY-VERCEL.md)；Cloudflare 部署见 [`DEPLOY-CLOUDFLARE.md`](./DEPLOY-CLOUDFLARE.md)。
 
+> Cloudflare Pages 需要把**构建输出目录**设为 `web`，否则站点会直接暴露仓库根目录。
+
 ## 输出示例
 
 ```text
@@ -84,14 +139,16 @@ vercel --prod
 关注 1,234 · 粉丝 1,456 · 抓到 关注 1,2xx / 粉丝 1,4xx
 互关 1,0xx · 回关率 xx% · 没回关你 xxx · 你没回关 xxx
 
-【没回关你】xxx 人 · 按关注先后
+【没回关你】xxx 人 · 按关注先后（早→晚）
    1. @xxxx  xxxx ✓ · 12.3万粉
    ...
 
-【你没回关】xxx 人 · 按关注先后
+【你没回关】xxx 人 · 按关注先后（早→晚）
    1. @xxxx  xxxx · 3,456粉
    ...
 ```
+
+> 蓝V / 非蓝V 的拆分显示在 Web 统计卡片中；CLI 在加 `--blue` 或 `--no-blue` 时会额外输出对应小计。
 
 ## 参数
 
@@ -101,7 +158,7 @@ vercel --prod
 | `--no-blue` | 不看蓝V（只列非蓝V） |
 | `--no-big` | 不看万粉及以上（粉丝 ≥ 1 万） |
 | `--no-lock` | 不看锁推账号 |
-| `--sort recent\|big\|small\|recent-big` | 关注先后（早→晚） / 粉丝多在前 / 粉丝少在前 / 时间优先且同时间粉丝多在前，默认 `recent` |
+| `--sort recent\|big\|small\|recent-big` | 关注先后（早→晚）/ 粉丝多在前 / 粉丝少在前 / 时间优先且同时间粉丝多在前，默认 `recent` |
 | `--limit n` | 每栏显示前 n 条，`0` 为全部，默认 40 |
 | `--workers n` | 每份名单的并发数，默认 4 |
 | `--rps n` | 全局限速（请求/秒），默认 8 |
@@ -124,6 +181,7 @@ vercel --prod
 - 这是非官方接口，随时可能改版或限流；工具里已做重试和限速。
 - 想用自己的额度，可以按 [`SELF-HOST.md`](./SELF-HOST.md) 部署一份 FxEmbed，再用 `--api` 指过去。
 - 名单里**不会出现被封/注销的号**，所以“抓到的人数”通常会比资料上的关注/粉丝数少一点点。
+- **锁推账号**会正常出现在名单里（`protected: true`），可用「不看锁推 / `--no-lock`」过滤；你无法直接回关它们。
 - “按关注先后”是按接口返回顺序和 cursor 做的 merge，不是精确的 `followed_at` 时间戳（接口不返回这个字段）。
 - 请不要高频、大规模抓取；默认 8 请求/秒已经比较保守。大量请求可能被上游限流。
 - 仅用于分析自己的账号或获得授权的账号，遵守 X 的使用条款和当地法律。
