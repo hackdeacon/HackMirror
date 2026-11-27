@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "HackMirror 批量取关助手",
+  "version": "1.0.0",
+  "description": "在 x.com 用你自己的登录态批量取关 HackMirror 选中的账号。",
+  "permissions": ["scripting", "tabs", "clipboardRead"],
+  "host_permissions": ["https://x.com/*", "https://twitter.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "HackMirror 批量取关"
+  }
+}

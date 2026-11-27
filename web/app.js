@@ -35,6 +35,7 @@
   const VISITED_KEY = 'hackmirror:visited:v1';
   const MARK_VISITED_KEY = 'hackmirror:mark-visited';
   const VISITED_LIMIT = 20000;
+  const MAX_BATCH_OPEN = 10;
   const MAX_FOLLOWING = 50000;
   const MAX_FOLLOWERS = 50000;
   const MAX_PAGES = 5000;
@@ -76,6 +77,17 @@
   const noLock = $('#no-lock');
   const markVisitedToggle = $('#mark-visited');
   const clearVisitedBtn = $('#clear-visited');
+  const selectToggle = $('#select-mode');
+  const selectionBar = $('#selection-bar');
+  const selectedCount = $('#selected-count');
+  const selectAllBtn = $('#select-all');
+  const openSelectedBtn = $('#open-selected');
+  const scriptSelectedBtn = $('#script-selected');
+  const copyUnfollowBtn = $('#copy-unfollow');
+  const clearSelectedBtn = $('#clear-selected');
+  const scriptDialog = $('#script-dialog');
+  const scriptText = $('#script-text');
+  const copyScriptBtn = $('#copy-script');
   const sortSelect = $('#sort-select');
   const copyBtn = $('#copy-btn');
   const jsonBtn = $('#json-btn');
@@ -148,6 +160,8 @@
     noLock: false,
     markVisited: loadMarkVisited(),
     visited: loadVisited(),
+    selectMode: false,
+    selected: new Set(),
     sort: 'recent',
     limit: PAGE_SIZE,
     lastHandle: '',
@@ -1488,6 +1502,7 @@
     }
 
     syncVisitedClasses();
+    syncSelection();
   }
 
   function syncVisitedClasses() {
@@ -1499,10 +1514,86 @@
     clearVisitedBtn.hidden = !state.markVisited || state.visited.size === 0;
   }
 
+  function syncSelection() {
+    mirrorList.classList.toggle('select-mode', state.selectMode);
+    for (const li of mirrorList.children) {
+      const id = li.dataset.id;
+      if (!id) continue;
+      const on = state.selected.has(id);
+      const cb = li.querySelector('.row-check');
+      if (cb) cb.checked = on;
+      li.classList.toggle('is-selected', on);
+    }
+    selectionBar.hidden = !state.selectMode;
+    selectedCount.textContent = fmt(state.selected.size);
+    const empty = state.selected.size === 0;
+    openSelectedBtn.disabled = empty;
+    scriptSelectedBtn.disabled = empty;
+    copyUnfollowBtn.disabled = empty;
+    clearSelectedBtn.disabled = empty;
+    selectAllBtn.disabled = !state.scan;
+  }
+
+  function selectedUsers() {
+    if (!state.scan) return [];
+    const map = new Map();
+    for (const list of [state.scan.notBack || [], state.scan.owe || []]) {
+      for (const u of list) map.set(String(u.id), u);
+    }
+    return [...state.selected].map((id) => map.get(String(id))).filter(Boolean);
+  }
+
+  function unfollowScript(list) {
+    const targets = JSON.stringify(list.map((u) => ({ id: String(u.id), handle: u.handle })));
+    return `(async () => {
+  const targets = ${targets};
+  const csrf = (document.cookie.match(/(?:^|;\\s*)ct0=([^;]+)/) || [])[1];
+  if (!csrf) { alert('请先登录 x.com 再运行'); return; }
+  if (!confirm('将取关 ' + targets.length + ' 个账号，继续？')) return;
+  const bearer = 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA';
+  let ok = 0, fail = 0, stopped = false;
+  const onKey = (e) => { if (e.key === 'Escape') stopped = true; };
+  addEventListener('keydown', onKey);
+  for (let i = 0; i < targets.length; i++) {
+    if (stopped) { console.log('已手动停止'); break; }
+    const t = targets[i];
+    let status = 0;
+    try {
+      const r = await fetch('https://x.com/i/api/1.1/friendships/destroy.json', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          'x-csrf-token': csrf,
+          'x-twitter-active-user': 'yes',
+          'x-twitter-auth-type': 'OAuth2Session',
+          'authorization': 'Bearer ' + bearer
+        },
+        body: 'user_id=' + encodeURIComponent(t.id)
+      });
+      status = r.status;
+      if (r.ok) ok++; else fail++;
+    } catch (e) { fail++; }
+    console.log((i + 1) + '/' + targets.length + ' @' + t.handle + ' -> ' + (status || 'error'));
+    await new Promise((res) => setTimeout(res, 2000 + Math.random() * 1500));
+  }
+  removeEventListener('keydown', onKey);
+  console.log('完成：成功 ' + ok + '，失败 ' + fail);
+  alert('取关完成：成功 ' + ok + '，失败 ' + fail);
+})();`;
+  }
+
   function createRow(u) {
     const li = document.createElement('li');
     li.className = 'mirror-item';
     li.dataset.id = u.id; // DOM diffing 用
+
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.className = 'row-check';
+    check.dataset.id = u.id;
+    check.setAttribute('aria-label', `选择 @${u.handle}`);
+    li.appendChild(check);
 
     const a = document.createElement('a');
     a.href = `https://x.com/${encodeURIComponent(u.handle)}`;
@@ -1564,6 +1655,8 @@
     state.noBlue = false;
     state.noBig = false;
     state.noLock = false;
+    state.selectMode = false;
+    state.selected.clear();
     state.sort = 'recent';
     state.limit = PAGE_SIZE;
     invalidateFilteredCache();
@@ -1571,6 +1664,7 @@
     noBlue.checked = false;
     noBig.checked = false;
     noLock.checked = false;
+    selectToggle.checked = false;
     sortSelect.value = 'recent';
 
     renderProfile(scan, fromCache);
@@ -1925,6 +2019,77 @@
   mirrorList.addEventListener('click', handleRowOpen);
   mirrorList.addEventListener('auxclick', handleRowOpen);
 
+  mirrorList.addEventListener('change', (e) => {
+    const cb = e.target;
+    if (!(cb instanceof HTMLInputElement) || !cb.classList.contains('row-check')) return;
+    const id = String(cb.dataset.id || '');
+    if (!id) return;
+    if (cb.checked) state.selected.add(id);
+    else state.selected.delete(id);
+    cb.closest('li')?.classList.toggle('is-selected', cb.checked);
+    syncSelection();
+  });
+
+  selectToggle.addEventListener('change', () => {
+    state.selectMode = selectToggle.checked;
+    renderList();
+  });
+
+  selectAllBtn.addEventListener('click', () => {
+    for (const u of getFiltered()) state.selected.add(String(u.id));
+    renderList();
+  });
+
+  clearSelectedBtn.addEventListener('click', () => {
+    state.selected.clear();
+    renderList();
+  });
+
+  openSelectedBtn.addEventListener('click', () => {
+    const targets = selectedUsers();
+    if (!targets.length) return;
+    const batch = targets.slice(0, MAX_BATCH_OPEN);
+    let opened = 0;
+    for (const u of batch) {
+      let w = null;
+      try {
+        w = window.open(`https://x.com/${encodeURIComponent(u.handle)}`, '_blank');
+      } catch {}
+      if (w) {
+        w.opener = null;
+        opened++;
+      }
+      if (state.markVisited) recordVisited(String(u.id));
+    }
+    if (state.markVisited) renderList();
+    if (targets.length > MAX_BATCH_OPEN) {
+      showToast(`一次最多打开 ${MAX_BATCH_OPEN} 个，已尝试打开前 ${batch.length} 个`);
+    } else if (!opened) {
+      showToast('浏览器拦截了新窗口，请允许本站弹出窗口后重试');
+    } else {
+      showToast(`已打开 ${opened} 个主页`);
+    }
+  });
+
+  copyUnfollowBtn.addEventListener('click', async () => {
+    const list = selectedUsers().map((u) => ({ id: String(u.id), handle: u.handle }));
+    if (!list.length) return;
+    const ok = await copyText(JSON.stringify(list, null, 2));
+    showToast(ok ? `已复制 ${list.length} 个账号，可粘贴到浏览器扩展` : '复制失败，请手动选择');
+  });
+
+  scriptSelectedBtn.addEventListener('click', () => {
+    const list = selectedUsers();
+    if (!list.length) return;
+    scriptText.value = unfollowScript(list);
+    scriptDialog.showModal();
+  });
+
+  copyScriptBtn.addEventListener('click', async () => {
+    const ok = await copyText(scriptText.value);
+    showToast(ok ? '脚本已复制' : '复制失败，请手动全选复制');
+  });
+
   sortSelect.addEventListener('change', () => {
     state.sort = ['recent', 'big', 'small', 'recent-big'].includes(sortSelect.value)
       ? sortSelect.value
@@ -2003,6 +2168,7 @@
 
   updateFormState();
   markVisitedToggle.checked = state.markVisited;
+  selectToggle.checked = state.selectMode;
 
   const q = new URLSearchParams(location.search).get('u');
   if (q) {

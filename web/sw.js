@@ -1,5 +1,5 @@
 // HackMirror Service Worker
-const VERSION = '9';
+const VERSION = '10';
 const CACHE_NAME = `hackmirror-v${VERSION}`;
 const STATIC_ASSETS = [
   '/',
