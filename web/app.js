@@ -81,6 +81,7 @@
   const selectionBar = $('#selection-bar');
   const selectedCount = $('#selected-count');
   const selectAllBtn = $('#select-all');
+  const select50Btn = $('#select-50');
   const openSelectedBtn = $('#open-selected');
   const scriptSelectedBtn = $('#script-selected');
   const copyUnfollowBtn = $('#copy-unfollow');
@@ -1532,6 +1533,7 @@
     copyUnfollowBtn.disabled = empty;
     clearSelectedBtn.disabled = empty;
     selectAllBtn.disabled = !state.scan;
+    select50Btn.disabled = !state.scan;
   }
 
   function selectedUsers() {
@@ -2038,6 +2040,28 @@
   selectAllBtn.addEventListener('click', () => {
     for (const u of getFiltered()) state.selected.add(String(u.id));
     renderList();
+  });
+
+  select50Btn.addEventListener('click', () => {
+    const list = getFiltered();
+    if (!list.length) return;
+    // 从最后一个已选项之后取 50 个；再点一次自动选下一批
+    let last = -1;
+    for (let i = 0; i < list.length; i++) {
+      if (state.selected.has(String(list[i].id))) last = i;
+    }
+    let batch = list.slice(last + 1, last + 1 + 50);
+    if (!batch.length) {
+      showToast('后面没有更多账号了，可先清除选择或重新扫描');
+      return;
+    }
+    state.selected = new Set(batch.map((u) => String(u.id)));
+    renderList();
+    if (batch.length < 50) {
+      showToast(`已勾选剩余 ${batch.length} 个`);
+    } else {
+      showToast('已勾选 50 个，再次点击选择下一批');
+    }
   });
 
   clearSelectedBtn.addEventListener('click', () => {
